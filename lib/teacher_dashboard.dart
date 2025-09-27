@@ -170,7 +170,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     return Scaffold(
       body: Row(
         children: [
-          const CustomDrawer(),
+           CustomDrawer(),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(20),

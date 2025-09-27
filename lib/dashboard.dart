@@ -256,7 +256,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
   Widget _buildMobileLayout() {
     return Scaffold(
-      drawer: const CustomDrawer(),
+      drawer:  CustomDrawer(),
       appBar: AppBar(
         title: const Text("Dashboard", style: TextStyle(fontSize: 18)),
         leading: Builder(
@@ -298,7 +298,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     return Scaffold(
       body: Row(
         children: [
-          const SizedBox(width: 250, child: CustomDrawer()),
+          SizedBox(width: 250, child: CustomDrawer()),
           SizedBox(
             width: 300,
             child: SearchChildWidget(

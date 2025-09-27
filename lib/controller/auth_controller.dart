@@ -9,14 +9,16 @@ import 'package:get/get.dart';
 class AuthController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+
   var isLoading = false.obs;
   var obscureText = true.obs;
   var emailController = TextEditingController();
   var passwordController = TextEditingController();
-  var roleController = TextEditingController(); // Add role controller
-  
-  // Add error state variables
+  var roleController = TextEditingController();
+
+  // ✅ Store logged-in user role here (parent/teacher)
+  var currentRole = ''.obs;
+
   var emailError = RxString('');
   var passwordError = RxString('');
   var roleError = RxString('');
@@ -31,35 +33,70 @@ class AuthController extends GetxController {
     roleError.value = '';
   }
 
+  Future<void> updateEmail(String newEmail) async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await user.verifyBeforeUpdateEmail(newEmail); // safer for reauth
+        await _firestore.collection('users').doc(user.uid).update({
+          'email': newEmail,
+        });
+        Get.snackbar("Success", "Email updated successfully. Verify new email.");
+      }
+    } on FirebaseAuthException catch (e) {
+      Get.snackbar("Error", e.message ?? "Failed to update email");
+    }
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await user.updatePassword(newPassword);
+        Get.snackbar("Success", "Password updated successfully");
+      }
+    } on FirebaseAuthException catch (e) {
+      Get.snackbar("Error", e.message ?? "Failed to update password");
+    }
+  }
+
+  Future<void> updateName(String newName) async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await _firestore.collection('users').doc(user.uid).update({
+          'name': newName,
+        });
+        Get.snackbar("Success", "Name updated successfully");
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Failed to update name");
+    }
+  }
+
   Future<void> loginUser() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
     final role = roleController.text.trim().toLowerCase();
 
-    // Clear previous errors
     clearErrors();
 
     if (email.isEmpty) {
       emailError.value = 'Email cannot be empty';
       return;
     }
-
     if (password.isEmpty) {
       passwordError.value = 'Password cannot be empty';
       return;
     }
-
     if (role.isEmpty) {
       roleError.value = 'Please select a role';
       return;
     }
-
     if (role != 'parent' && role != 'teacher') {
       roleError.value = 'Role must be either "parent" or "teacher"';
       return;
     }
-
-    // Email format validation
     if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
       emailError.value = 'Please enter a valid email';
       return;
@@ -83,6 +120,7 @@ class AuthController extends GetxController {
         final parentDoc = await _firestore.collection('parents').doc(userId).get();
 
         if (parentDoc.exists) {
+          currentRole.value = 'parent'; // ✅ Store current role
           Navigator.of(Get.context!).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const ParentDashboardScreen()),
             (route) => false,
@@ -93,17 +131,15 @@ class AuthController extends GetxController {
           passwordError.value = 'Please check your role selection';
         }
       } else if (role == 'teacher') {
-        // Check if user exists in TEACHERS collection
         final teacherDoc = await _firestore.collection('teachers').doc(userId).get();
 
         if (teacherDoc.exists) {
-
+          currentRole.value = 'teacher'; // ✅ Store current role
           Navigator.of(Get.context!).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()),
             (route) => false,
           );
         } else {
-          // NOT A TEACHER - DENY ACCESS
           await _auth.signOut();
           emailError.value = 'This account is not registered as a teacher';
           passwordError.value = 'Please check your role selection';
@@ -131,6 +167,7 @@ class AuthController extends GetxController {
     emailController.clear();
     passwordController.clear();
     roleController.clear();
+    currentRole.value = ''; // ✅ clear role
     clearErrors();
     Get.offAll(() => ParentLoginScreen());
   }

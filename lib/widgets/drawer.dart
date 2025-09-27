@@ -1,7 +1,15 @@
+import 'package:autism_parent_web/controller/auth_controller.dart';
+import 'package:autism_parent_web/setting_screen.dart';
+import 'package:autism_parent_web/teacher_dashboard.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:autism_parent_web/dashboard.dart';
+import 'package:autism_parent_web/profile_screen.dart'; 
 
 class CustomDrawer extends StatelessWidget {
-  const CustomDrawer({super.key});
+  final AuthController authController = Get.find<AuthController>();
+
+  CustomDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,22 +22,27 @@ class CustomDrawer extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 50),
             children: [
-              _buildDrawerItem(Icons.home, "Dashboard", iconSize, fontSize, () {
+              _buildDrawerItem(Icons.home, "Progress", iconSize, fontSize, () {
                 Navigator.pop(context);
+if (authController.currentRole.value == 'teacher') {
+  Get.to(() => const TeacherDashboardScreen());
+} else {
+  Get.to(() => const ParentDashboardScreen());
+}
               }),
               _buildDrawerItem(Icons.person, "Profile", iconSize, fontSize, () {
                 Navigator.pop(context);
+                Get.to(() =>  ProfileScreen()); 
               }),
-              _buildDrawerItem(Icons.settings, "Settings", iconSize, fontSize,
+             
+              _buildDrawerItem(Icons.settings, "Setting", iconSize, fontSize,
                   () {
                 Navigator.pop(context);
-              }),
-              _buildDrawerItem(Icons.bar_chart, "Progress", iconSize, fontSize,
-                  () {
-                Navigator.pop(context);
+                Get.to(() =>  SettingsScreen()); 
               }),
               _buildDrawerItem(Icons.logout, "Sign Out", iconSize, fontSize, () {
                 Navigator.pop(context);
+                authController.logout();
               }),
             ],
           );
@@ -38,19 +51,20 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerItem(IconData icon, String text, double iconSize,
-      double fontSize, VoidCallback onTap) {
+
+  Widget _buildDrawerItem(
+      IconData icon, String text, double iconSize, double fontSize, VoidCallback onTap) {
     return ListTile(
       leading: Icon(
         icon,
         size: iconSize,
-        color: Colors.teal, 
+        color: Colors.teal,
       ),
       title: Text(
         text,
         style: TextStyle(
           fontSize: fontSize,
-          color: const Color.fromARGB(255, 0, 0, 0), 
+          color: Colors.black,
           fontWeight: FontWeight.w400,
         ),
       ),

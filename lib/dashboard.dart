@@ -65,10 +65,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         return;
       }
 
-      // Fetch all modules to calculate progress
       await _fetchModuleProgress();
-      
-      // Calculate skill-based progress
       await _calculateSkillProgress();
 
       setState(() {
@@ -103,7 +100,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       int completedQuizzes = 0;
       int totalQuizzes = 0;
       
-      // Calculate module completion based on quizzes
       if (moduleData['quizzes'] is Map) {
         final quizzes = Map<String, dynamic>.from(moduleData['quizzes']);
         totalQuizzes = quizzes.length;
@@ -112,7 +108,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           if (quizData is Map && quizData['isCompleted'] == true) {
             completedQuizzes++;
             
-            // Add to recent activities
             if (recentActivities.length < 5) {
               recentActivities.add({
                 'module': moduleDoc.id,
@@ -132,7 +127,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       moduleProgress[moduleDoc.id] = completionRate;
     }
     
-    // Sort recent activities by timestamp
     recentActivities.sort((a, b) {
       final aTime = a['timestamp'] as Timestamp;
       final bTime = b['timestamp'] as Timestamp;
@@ -141,14 +135,12 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   }
 
   Future<void> _calculateSkillProgress() async {
-    // Reset progress
     skillProgress = {
       "cognitive": 0.0,
       "learning": 0.0,
       "behavior": 0.0,
     };
     
-    // Define which modules belong to which skill category
     final Map<String, List<String>> skillCategories = {
       "cognitive": ["ABC letters", "Add and Subtract", "counting", "Match", "Searching"],
       "learning": ["Birds", "home animals", "Unmixing search"],
@@ -159,7 +151,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     int learningModules = 0;
     int behaviorModules = 0;
     
-    // Calculate average progress for each category
     moduleProgress.forEach((moduleName, progress) {
       if (skillCategories["cognitive"]!.contains(moduleName)) {
         skillProgress["cognitive"] = skillProgress["cognitive"]! + progress;
@@ -173,7 +164,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       }
     });
     
-    // Calculate averages
     if (cognitiveModules > 0) {
       skillProgress["cognitive"] = skillProgress["cognitive"]! / cognitiveModules;
     }
@@ -185,11 +175,9 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     }
   }
 
-  // Function to delete child from Firebase
   Future<void> _deleteChild() async {
     if (_selectedChildId == null) return;
 
-    // Show confirmation dialog
     bool confirmDelete = await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -213,7 +201,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     if (confirmDelete != true) return;
 
     try {
-      // Delete child document from Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(_selectedChildId)
@@ -386,7 +373,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Child Profile Card with Delete Button
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -423,15 +409,13 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           
           const SizedBox(height: 20),
           
-          // Module Assignment Widget - ADDED HERE
-          ModuleAssignmentWidget(
-            childId: _selectedChildId!,
-            childName: childData?['username'] ?? 'Your Child',
-          ),
+          // ModuleAssignmentWidget(
+          //   childId: _selectedChildId!,
+          //   childName: childData?['username'] ?? 'Your Child',
+          // ),
           
           const SizedBox(height: 20),
           
-          // Module Progress Section
           const Text(
             "Module Progress",
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -441,7 +425,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           
           const SizedBox(height: 20),
           
-          // Recent Activities
           const Text(
             "Recent Activities",
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -513,7 +496,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   }
 
   String _formatModuleName(String moduleName) {
-    // Convert snake_case or camelCase to Title Case
     return moduleName
         .replaceAllMapped(RegExp(r'^[a-z]|[A-Z]'), 
             (Match m) => m[0]!.toUpperCase())
